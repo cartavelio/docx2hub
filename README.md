@@ -28,18 +28,14 @@ If you want to include this library in your XProc pipeline, please refer to this
 The test-only Kotlin/JVM harness lives in [tests/jvm](tests/jvm). Its sole
 checked-in Gradle wrapper uses Java 17, pinned Kotlin/JUnit, ktlint, and type-aware
 detekt checks. It does not change the XSLT library or add an application runtime.
+Git, network access, and a caller-supplied JDK 17 are prerequisites. Set
+`JAVA_HOME` to that JDK or put its `java` on `PATH` before launching Gradle.
+The harness selects a local JDK 17 and has no automatic JDK provisioning.
+If Java cannot be found, the wrapper reports how to set `JAVA_HOME`.
 From the repository root, run the same non-writing full check as PR CI:
 
 ```sh
 tests/jvm/gradlew -p tests/jvm check --no-daemon
-```
-
-When Java is absent, prefix any wrapper command with
-`tests/jvm/scripts/with-jdk.sh --` to select the checksum-pinned bootstrap JDK17
-for that command. No Python installation is required. For example:
-
-```sh
-tests/jvm/scripts/with-jdk.sh -- tests/jvm/gradlew -p tests/jvm check --no-daemon
 ```
 
 The harness executes real Saxon HE 12.10 child processes against both historical
