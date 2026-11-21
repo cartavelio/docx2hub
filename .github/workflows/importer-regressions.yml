@@ -1,0 +1,37 @@
+name: Importer regressions
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  saxon-he:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce both baselines and validate corrected source
+        run: >-
+          python3 tests/importer_regressions.py
+          --work-dir "$RUNNER_TEMP/importer-regressions"
+          --baseline-ref 29e264dafd09dc684d903005feaa4e4cc693f4b1
+          --baseline-ref 68b4ec45624e918a357c5a628bed6c3ec3158669
+      - name: Retain synthetic execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: importer-regression-evidence
+          path: ${{ runner.temp }}/importer-regressions/*/*.log
