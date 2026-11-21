@@ -33,9 +33,29 @@
   <!-- insert-default-settings: add default lang and font or only add srcpaths atts in mode insert-xpath -->
   <xsl:param name="insert-default-settings" as="xs:string" select="'yes'"/>
 
+  <!-- Wide sibling groups otherwise require repeated linear scans for every source path. -->
+  <xsl:variable name="docx2hub:srcpath-index" as="document-node()">
+    <xsl:document>
+      <docx2hub:positions>
+        <xsl:for-each select="//*[count(*) gt 64]">
+          <xsl:for-each-group select="*" group-by="name()">
+            <xsl:for-each select="current-group()">
+              <docx2hub:position node="{generate-id()}" value="{position()}"/>
+            </xsl:for-each>
+          </xsl:for-each-group>
+        </xsl:for-each>
+      </docx2hub:positions>
+    </xsl:document>
+  </xsl:variable>
+
+  <xsl:key name="docx2hub:srcpath-position" match="docx2hub:position" use="@node"/>
+
   <xsl:function name="docx2hub:srcpath" as="xs:string">
     <xsl:param name="node" as="element()"/>
     <xsl:param name="ancestor-srcpath" as="xs:string?"/>
+    <xsl:variable name="cached-position"
+      select="key('docx2hub:srcpath-position', generate-id($node),
+                  $docx2hub:srcpath-index)/@value"/>
     <xsl:choose>
       <xsl:when test="$ancestor-srcpath = ''">
         <xsl:sequence select="docx2hub:srcpath($node)"/>
@@ -46,7 +66,8 @@
         <xsl:sequence select="concat(
                                 $ancestor-srcpath, '/',
                                 name($node),
-                                '[', count($node/preceding-sibling::*[name() = $node-name]) + 1, ']'
+                                '[', if ($cached-position) then $cached-position
+                                else count($node/preceding-sibling::*[name() = $node-name]) + 1, ']'
                               )"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -58,13 +79,19 @@
            (see template match="/w:document") -->
   <xsl:function name="docx2hub:srcpath" as="xs:string">
     <xsl:param name="elt" as="element(*)?"/>
+    <xsl:variable name="cached-position"
+      select="key('docx2hub:srcpath-position', generate-id($elt),
+                  $docx2hub:srcpath-index)/@value"/>
     <xsl:sequence select="string-join(
                             (
                               if ($elt/.. instance of element(*)) then docx2hub:srcpath($elt/..) else concat(base-uri($elt), '?xpath='),
                               '/',
                               name($elt),
                               '[',
-                              xs:string(index-of(for $s in $elt/../*[name() = name($elt)] return generate-id($s), generate-id($elt))),
+                              if ($cached-position) then string($cached-position)
+                              else xs:string(index-of(
+                                for $s in $elt/../*[name() = name($elt)] return generate-id($s),
+                                generate-id($elt))),
                               ']'
                             ),
                             ''
@@ -177,7 +204,11 @@
             <xsl:apply-templates select="document(resolve-uri(current(), $base-dir))/w:endnotes" mode="#current"/>
           </xsl:if>
         </xsl:for-each>
-        <xsl:apply-templates select="document(resolve-uri('settings.xml', $base-dir))/w:settings" mode="#current"/>
+        <xsl:if test="doc-available(resolve-uri('settings.xml', $base-dir))">
+          <xsl:apply-templates
+            select="document(resolve-uri('settings.xml', $base-dir))/w:settings"
+            mode="#current"/>
+        </xsl:if>
         <xsl:for-each select="document($docRels-uri)/rel:Relationships
                               /rel:Relationship[@Type eq 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments']/@Target">
           <xsl:if test="doc-available(resolve-uri(current(), $base-dir))">
@@ -190,7 +221,11 @@
             <xsl:apply-templates select="document(resolve-uri(current(), $base-dir))/w15:commentsEx" mode="#current"/>
           </xsl:if>
         </xsl:for-each>
-        <xsl:apply-templates select="document(resolve-uri('fontTable.xml', $base-dir))/w:fonts" mode="#current"/>
+        <xsl:if test="doc-available(resolve-uri('fontTable.xml', $base-dir))">
+          <xsl:apply-templates
+            select="document(resolve-uri('fontTable.xml', $base-dir))/w:fonts"
+            mode="#current"/>
+        </xsl:if>
         <w:docTypes>
           <xsl:apply-templates select="document(resolve-uri('../%5BContent_Types%5D.xml', $base-dir))/ct:Types" mode="#current"
           />

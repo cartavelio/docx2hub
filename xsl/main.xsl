@@ -81,9 +81,8 @@
     name="debug"
     method="xml"
     encoding="utf-8"
-    indent="yes"
+    indent="no"
     use-character-maps="cleanups"
-    saxon:suppress-indentation="entry para title term link"
     cdata-section-elements=''
     />
 

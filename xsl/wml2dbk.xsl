@@ -1933,7 +1933,7 @@
   </xsl:template>
   
   <xsl:function name="docx2hub:twips2mm" as="xs:string">
-    <xsl:param name="val" as="xs:integer"/>
+    <xsl:param name="val" as="xs:decimal"/>
     <xsl:sequence select="concat(xs:string($val * 0.01763889), 'mm')" />
   </xsl:function>
 
