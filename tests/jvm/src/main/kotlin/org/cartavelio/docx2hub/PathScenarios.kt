@@ -24,7 +24,7 @@ object PathScenarios {
             secondary
                 ?.let {
                     val file = case.input("secondary.xml", it)
-                    ", document('${Xml.escape(file.toUri().toString())}')//*"
+                    ", document('${Xml.escape(file.toUri().toString().replace("'", "''"))}')//*"
                 }.orEmpty()
         val stylesheet =
             case.wrapper(

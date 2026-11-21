@@ -12,11 +12,13 @@ data class SourceVersion(
     val baseline: Boolean,
 )
 
-class ImporterEnvironment {
+class ImporterEnvironment(
+    evidenceDirectory: Path =
+        System.getProperty("importer.evidence")?.let { Path.of(it) }
+            ?: Files.createTempDirectory("docx2hub-kotlin-tests-"),
+) {
     val repo: Path = Path.of(requireNotNull(System.getProperty("importer.repo"))).toRealPath()
-    val evidence: Path =
-        System.getProperty("importer.evidence")?.let { Path.of(it).toAbsolutePath().normalize() }
-            ?: Files.createTempDirectory("docx2hub-kotlin-tests-")
+    val evidence: Path = evidenceDirectory.toAbsolutePath().normalize()
     val cache: Path =
         System.getProperty("importer.dependencies")?.let { Path.of(it).toAbsolutePath().normalize() }
             ?: evidence.resolve("dependencies")
@@ -28,15 +30,13 @@ class ImporterEnvironment {
         check(!evidence.startsWith(repo) && !cache.startsWith(repo)) { "Keep evidence/dependencies outside source" }
         evidence.createDirectories()
         val util = Dependencies.prepare(cache, evidence)
+        val utilPrefix = Xml.escape("${util.toUri().toString().trimEnd('/')}/")
+        val functxPrefix = Xml.escape("${util.resolve("functx").toUri().toString().trimEnd('/')}/")
         evidence.resolve("catalog.xml").writeText(
             """
             <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-              <rewriteURI uriStartString="http://transpect.io/xslt-util/" rewritePrefix="${util.toUri().toString().trimEnd(
-                '/',
-            )}/"/>
-              <rewriteURI uriStartString="http://www.functx.com/" rewritePrefix="${util.resolve(
-                "functx",
-            ).toUri().toString().trimEnd('/')}/"/>
+              <rewriteURI uriStartString="http://transpect.io/xslt-util/" rewritePrefix="$utilPrefix"/>
+              <rewriteURI uriStartString="http://www.functx.com/" rewritePrefix="$functxPrefix"/>
             </catalog>
             """.trimIndent(),
         )

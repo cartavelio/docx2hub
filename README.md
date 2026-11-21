@@ -53,6 +53,8 @@ explicit authored content and IDs, emitted XML, exact decimal outputs, and an
 independent physical-unit crosscheck. The tests import actual `xsl/main.xsl`;
 no source or binary patching is involved. No proprietary inputs, fonts or images
 are required. This focused coverage does not claim full DOCX/XProc acceptance.
+An additional importer regression checks catalog resolution and both source-path
+overloads with ampersands and apostrophes in the evidence directory.
 
 Evidence (exact commands, exit statuses, logs and XML) is retained outside the
 source checkout; the directory is printed by the test JVM. Choose a fresh

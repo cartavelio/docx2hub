@@ -1,6 +1,7 @@
 package org.cartavelio.docx2hub
 
 import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 
 /** Every test executes the real importer; the two baselines must reproduce their failures. */
@@ -31,6 +32,14 @@ class ImporterRegressionTest {
 
     @TestFactory
     fun sourcePathFunctions(): List<DynamicTest> = versions("functions" to PathScenarios::functions)
+
+    @Test
+    fun evidencePathCharacters() {
+        val special = ImporterEnvironment(environment.evidence.resolve("ampersand & apostrophe '"))
+        val version = special.versions.single { !it.baseline }
+        PathScenarios.functions(special.case(version, "functions"))
+        PathScenarios.wideSecondary(special.case(version, "wide-secondary"))
+    }
 
     @TestFactory
     fun optionalAndBoundaryCases(): List<DynamicTest> =
