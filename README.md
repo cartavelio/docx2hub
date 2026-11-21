@@ -25,39 +25,58 @@ If you want to include this library in your XProc pipeline, please refer to this
 
 ## Maintained importer regressions
 
-Run the synthetic source tests with Python 3.10+ and Java 17:
+The test-only Kotlin/JVM harness lives in [tests/jvm](tests/jvm). Its sole
+checked-in Gradle wrapper uses Java 17, pinned Kotlin/JUnit, ktlint, and type-aware
+detekt checks. It does not change the XSLT library or add an application runtime.
+From the repository root, run the same non-writing full check as PR CI:
 
 ```sh
-python3 tests/importer_regressions.py
+tests/jvm/gradlew -p tests/jvm check --no-daemon
 ```
 
-The runner downloads checksum-pinned Saxon HE 12.10, XML Resolver 6.1.0 and
-transpect/xslt-util source into an external temporary directory. It imports the
-actual `xsl/main.xsl`; no source or binary patching is involved. Use
-`--work-dir /absolute/external/directory` to retain the dependency cache and
-per-case commands, XML and logs. Choose a fresh directory for each execution.
-No Python packages, proprietary inputs, fonts or images are required.
-
-CI runs the same command with these additional arguments to reproduce the
-known failures on the frozen proposal base and the newer upstream base:
+When Java is absent, prefix any wrapper command with
+`tests/jvm/scripts/with-jdk.sh --` to select the checksum-pinned bootstrap JDK17
+for that command. No Python installation is required. For example:
 
 ```sh
---baseline-ref 29e264dafd09dc684d903005feaa4e4cc693f4b1 \
---baseline-ref 68b4ec45624e918a357c5a628bed6c3ec3158669
+tests/jvm/scripts/with-jdk.sh -- tests/jvm/gradlew -p tests/jvm check --no-daemon
 ```
 
-Each baseline must exhibit the expected decimal width errors, missing-part
-errors, HE serialization warning and endnote ambiguity. The corrected source
-must pass without those diagnostics. Assertions cover decimal table columns
-and point lengths, authored note text and IDs, emitted debug serialization,
-optional settings/fonts (present and absent), and 2,109 source locations checked
-against an independent lexical-sibling DOM oracle. Both source-path function
-overloads also run on a secondary document to exercise the uncached fallback.
-These focused importer tests do not claim full DOCX/XProc pipeline acceptance.
+The harness executes real Saxon HE 12.10 child processes against both historical
+baselines (`29e264dafd09dc684d903005feaa4e4cc693f4b1` and
+`68b4ec45624e918a357c5a628bed6c3ec3158669`) and the current importer. Each has
+10 scenarios: compile, decimal widths, fractional points, notes, named debug
+serialization, source locations, missing settings, missing font table, both
+source-path overloads, and table conversion. All 30 outcomes are required;
+baselines must reproduce their known failures and the current source must pass.
 
-For a non-writing syntax/whitespace check, run:
+Four further current-source cases cover both optional parts missing, the exact
+64/65-child indexing boundary, and wide secondary-document fallback. Assertions
+check 2,109 lexical locations against an independent DOM sibling-count oracle,
+explicit authored content and IDs, emitted XML, exact decimal outputs, and an
+independent physical-unit crosscheck. The tests import actual `xsl/main.xsl`;
+no source or binary patching is involved. No proprietary inputs, fonts or images
+are required. This focused coverage does not claim full DOCX/XProc acceptance.
+
+Evidence (exact commands, exit statuses, logs and XML) is retained outside the
+source checkout; the directory is printed by the test JVM. Choose a fresh
+`-PimporterEvidenceDir=/absolute/external/directory` for each execution. A reusable
+external dependency cache can be specified separately with
+`-PimporterDependencyDir=/absolute/external/cache`. Downloads of Saxon HE 12.10,
+XML Resolver 6.1.0 and immutable transpect/xslt-util source are SHA-256 verified;
+the Gradle wrapper distribution and build plugin/dependency versions are pinned.
+CI runs the full check directly on pull requests and uploads synthetic evidence
+and JUnit results.
+
+Focused behavior check, formatting, and non-writing quality checks:
 
 ```sh
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('tests/importer_regressions.py').read_text())"
-git diff --check
+tests/jvm/gradlew -p tests/jvm test --tests '*ImporterRegressionTest.widths' --no-daemon
+tests/jvm/gradlew -p tests/jvm ktlintFormat --no-daemon
+tests/jvm/gradlew -p tests/jvm ktlintCheck detektMain detektTest --no-daemon
 ```
+
+The implementation/test pair is [WidthScenarios.kt](tests/jvm/src/main/kotlin/org/cartavelio/docx2hub/WidthScenarios.kt)
+and [ImporterRegressionTest.kt](tests/jvm/src/test/kotlin/org/cartavelio/docx2hub/ImporterRegressionTest.kt).
+Compilation during development: `tests/jvm/gradlew -p tests/jvm compileKotlin compileTestKotlin`.
+New harness code has warnings-as-errors, no suppressions and no analyzer baseline.
