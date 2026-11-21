@@ -68,9 +68,8 @@
       '.tmp' appended to OS file path.</p:documentation>
   </p:option>
   <p:option name="no-srcpaths-for-text-runs-threshold" select="'40000'">
-    <p:documentation>In order to speed up conversion for long documents, if more w:r elements are found, they won’t receive 
-      a srcpath of their own. In principle, srcpath generation may be sped up by computing them more efficiently,
-      building on a tunnelled parameter that contains the parent element’s already-computed srcpath.</p:documentation>
+    <p:documentation>In order to speed up conversion for long documents, if the combined count of w:r and w:t elements
+      exceeds this threshold, those elements won’t receive a srcpath of their own.</p:documentation>
   </p:option>
   <p:option name="use-filename-from-http-response" required="false" select="'no'">
     <p:documentation>Use filename that is passed on from http request response instead of 

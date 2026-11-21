@@ -4,9 +4,24 @@ Converts Microsoft docx to flat hub XML
 
 Please note that this is just a library and not a standalone converter. For further information and an example implementation see the [frontend project](https://github.com/transpect/docx2hub-frontend). Another usage example is [docx2tex](https://github.com/transpect/docx2tex).
 
-The options for `docx2hub.xpl` are documented in the [file itself](https://github.com/transpect/docx2hub/blob/master/xpl/docx2hub.xpl#L97).
+The options for `docx2hub.xpl` are documented in the [file itself](xpl/docx2hub.xpl).
 
 If you want to include this library in your XProc pipeline, please refer to this [tutorial](https://transpect.github.io/getting-started.html).
+
+## Maintained importer behavior
+
+- The named XSLT `debug` output uses serialization supported by Saxon HE and
+  adds no indentation whitespace to mixed content.
+- In the `docx2hub:join-runs` mode, endnote IDs use the `en-` prefix and footnote
+  IDs use `fn-`; the endnote rule takes precedence without an ambiguous match.
+- Source-path sibling positions count lexical names, including prefixes, so
+  `w:p` and `q:p` have separate positions even when they share a namespace.
+  Wide sibling groups use indexed positions; small groups and nodes outside
+  the index retain the original fallback calculation.
+- The `insert-xpath` stage loads `word/settings.xml` and `word/fontTable.xml`
+  when available and skips unavailable parts.
+- Table grid widths and the `docx2hub:pt-length` and `docx2hub:twips2mm`
+  conversions accept decimal twip values as well as integers.
 
 ## Maintained importer regressions
 
