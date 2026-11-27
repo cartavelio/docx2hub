@@ -188,7 +188,7 @@
       <xsl:attribute name="{name()}" select="concat('fn-', index-of($footnote-ids, .))"/>
   </xsl:template>
   
-  <xsl:template match="dbk:footnote[@role='endnote']/@xml:id" mode="docx2hub:join-runs">
+  <xsl:template match="dbk:footnote[@role='endnote']/@xml:id" mode="docx2hub:join-runs" priority="1">
       <xsl:attribute name="{name()}" select="concat('en-', index-of($endnote-ids, .))"/>
   </xsl:template>
 

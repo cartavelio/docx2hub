@@ -1,0 +1,37 @@
+name: Importer regressions
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  saxon-he:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile, lint and execute Kotlin importer regressions
+        working-directory: tests/jvm
+        run: ./gradlew check --no-daemon -PimporterEvidenceDir="$RUNNER_TEMP/importer-regressions"
+      - name: Retain synthetic execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: importer-regression-evidence
+          path: |
+            ${{ runner.temp }}/importer-regressions/*/*/*.log
+            ${{ runner.temp }}/importer-regressions/*/*/*.xml
+            ${{ runner.temp }}/importer-regressions/*/*/*.json
+            ${{ runner.temp }}/importer-regressions/versions.json
+            tests/jvm/build/test-results/test/
+            tests/jvm/build/reports/detekt/

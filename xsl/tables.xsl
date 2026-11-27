@@ -179,7 +179,7 @@
       select="if (every $type in parent::*/following-sibling::w:tr/descendant::w:tcW/@w:type satisfies ($type eq 'pct')) 
               then 'percent' else ''"/>
     <xsl:variable name="colwidth-sum" as="xs:double" select="sum(parent::*/w:gridCol/@w:w)"/>
-    <xsl:variable name="current-width" as="xs:integer" select="xs:integer(@w:w)"/>
+    <xsl:variable name="current-width" as="xs:decimal" select="xs:decimal(@w:w)"/>
     <colspec>
       <xsl:attribute name="colnum">
         <xsl:value-of select="$pos"/>
@@ -303,7 +303,7 @@
 
   <xsl:template match="w:tc[not(docx2hub:is-blind-vmerged-cell(.))]" mode="tables">
     <xsl:param name="is-first-row-in-group" as="xs:boolean?" tunnel="yes"/>
-    <xsl:param name="col-widths" tunnel="yes" as="xs:integer*"/>
+    <xsl:param name="col-widths" tunnel="yes" as="xs:decimal*"/>
     <xsl:param name="row-overrides" as="attribute(*)*"/>
     <xsl:param name="table-borders" as="attribute(*)*" tunnel="yes"/>
     <xsl:element name="entry">
